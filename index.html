@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Kindle-Style PDF Reader</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f3ec;
+      --surface: #ffffff;
+      --reader-bg: #ebe6dc;
+      --ink: #1c1b18;
+      --muted: #6e6a61;
+      --border: #dfdbd0;
+      --brand: #2b2925;
+      --brand-ink: #ffffff;
+      --accent: #8c6d46;
+      --accent-soft: #f5efe4;
+      --danger: #b42318;
+      --danger-bg: #fef3f2;
+      --radius: 12px;
+      --shadow: 0 8px 24px rgba(28, 27, 24, 0.08);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      background: var(--reader-bg);
+      color: var(--ink);
+      user-select: none;
+    }
+
+    /* Setup / File Selection Screen */
+    .setup-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+      overflow-y: auto;
+    }
+
+    .setup-screen.hidden {
+      display: none;
+    }
+
+    .setup-card {
+      width: 100%;
+      max-width: 580px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .setup-card.drag-over {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(140, 109, 70, 0.18);
+    }
+
+    .setup-header {
+      margin-bottom: 20px;
+    }
+
+    .setup-title {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    .setup-subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Preset Google Drive Buttons */
+    .preset-section {
+      margin-bottom: 20px;
+    }
+
+    .section-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .preset-btn {
+      font: inherit;
+      text-align: left;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--accent-soft);
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--accent);
+      background: #efe6d5;
+      box-shadow: 0 4px 12px rgba(140, 109, 70, 0.12);
+    }
+
+    .preset-btn:active {
+      transform: scale(0.98);
+    }
+
+    .preset-btn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .preset-btn-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .preset-btn-meta {
+      font-size: 12px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .text-input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      font-size: 14px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #faf9f6;
+      color: var(--ink);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(140, 109, 70, 0.16);
+      background: var(--surface);
+    }
+
+    .btn {
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 18px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+
+    .btn-primary:hover {
+      background: #3d3a35;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border-color: var(--border);
+      width: 100%;
+    }
+
+    .btn-secondary:hover {
+      background: #f6f3ec;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .error-box {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: var(--danger-bg);
+      border: 1px solid #fecdca;
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .error-box.visible {
+      display: block;
+    }
+
+    .guide-hint {
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .guide-item {
+      background: #faf8f3;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .guide-item strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    /* Fullscreen Reader Container */
+    .reader-viewport {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--reader-bg);
+      overflow: hidden;
+      padding-bottom: 34px;
+    }
+
+    .canvas-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    #pdf-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+      display: block;
+      transition: opacity 0.14s ease;
+    }
+
+    /* Embedded Google Drive Single-Page Cropped Stage */
+    .embed-stage {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 34px;
+      width: 100vw;
+      height: calc(100vh - 34px);
+      z-index: 8;
+      background: var(--reader-bg);
+      overflow: hidden;
+      pointer-events: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .embed-stage.visible {
+      display: flex;
+    }
+
+    /* Single-page clipping window scaled to fit the screen */
+    .embed-frame-scroller {
+      position: relative;
+      overflow: hidden;
+      pointer-events: none;
+      background: #ffffff;
+      border-radius: 2px;
+      transform-origin: center center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      flex-shrink: 0;
+    }
+
+    /* Fixed-width iframe so Google Drive page size never changes on fullscreen/resize */
+    .embed-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 698px;
+      height: 36000px;
+      border: 0;
+      display: block;
+      transform: translate(0, 0);
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+
+    .embed-stage.free-scroll-mode,
+    .embed-stage.free-scroll-mode .embed-frame-scroller,
+    .embed-stage.free-scroll-mode .embed-iframe {
+      pointer-events: auto;
+    }
+
+    .embed-stage.free-scroll-mode .embed-frame-scroller {
+      width: 100% !important;
+      height: 100% !important;
+      transform: none !important;
+      border-radius: 0;
+    }
+
+    .embed-stage.free-scroll-mode .embed-iframe {
+      position: static;
+      width: 100% !important;
+      height: 100% !important;
+      transform: none !important;
+    }
+
+    /* Kindle Touch Zones: Split 50% Left / 50% Right directly over the PDF */
+    .touch-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 34px;
+      z-index: 15;
+      display: grid;
+      grid-template-columns: 50% 50%;
+      width: 100%;
+      height: calc(100vh - 34px);
+      pointer-events: auto;
+    }
+
+    .touch-overlay.hidden {
+      display: none;
+    }
+
+    .touch-zone {
+      height: 100%;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.001);
+      touch-action: manipulation;
+    }
+
+    .touch-zone-left {
+      justify-content: flex-start;
+      padding-left: 20px;
+      border-right: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .touch-zone-right {
+      justify-content: flex-end;
+      padding-right: 20px;
+    }
+
+    /* Subtle visual ripple/feedback on tap */
+    .zone-indicator {
+      opacity: 0;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(28, 27, 24, 0.78);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+
+    .touch-zone.active-tap {
+      background: rgba(28, 27, 24, 0.04);
+    }
+
+    .touch-zone.active-tap .zone-indicator {
+      opacity: 1;
+    }
+
+    /* Compact button inside bottom footer right before page number */
+    .floating-menu-pill {
+      display: none;
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .floating-menu-pill:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .floating-menu-pill.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Minimal Top Bar (toggled by tapping center or button) */
+    .reader-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(6px);
+      transform: translateY(-100%);
+      transition: transform 0.2s ease;
+      flex-wrap: wrap;
+    }
+
+    .reader-topbar.visible {
+      transform: translateY(0);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .doc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+
+    .quick-switch-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-switch-link {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .btn-switch-link.active {
+      background: var(--brand);
+      color: var(--brand-ink);
+      border-color: var(--brand);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-compact {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .btn-compact:hover {
+      background: var(--bg);
+    }
+
+    /* Kindle Bottom Status Bar */
+    .reader-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 34px;
+      z-index: 24;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 14px;
+      font-size: 12px;
+      background: rgba(244, 241, 234, 0.96);
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      pointer-events: auto;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 28;
+      background: rgba(244, 241, 234, 0.92);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .loading-overlay.visible {
+      display: flex;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 640px) {
+      .setup-card {
+        padding: 22px;
+      }
+      .preset-grid {
+        grid-template-columns: 1fr;
+      }
+      .input-row {
+        flex-direction: column;
+      }
+      .guide-hint {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Setup / Link Entry Screen -->
+  <section id="setup-screen" class="setup-screen" aria-label="เลือกไฟล์ PDF">
+    <div id="setup-card" class="setup-card">
+      <div class="setup-header">
+        <h1 class="setup-title">เครื่องอ่าน PDF สไตล์ Kindle</h1>
+        <p class="setup-subtitle">เลือกเปิดอ่านไฟล์ PDF จากลิงก์ Google Drive ทั้ง 2 ไฟล์ที่ตั้งค่าไว้ด้านล่างได้ทันที แสดงผลเต็มหน้าจอพร้อมระบบแตะด้านขวาเพื่อไปหน้าถัดไป และแตะด้านซ้ายเพื่อย้อนกลับ</p>
+      </div>
+
+      <!-- Preset Buttons for Link 1 and Link 2 -->
+      <div class="preset-section">
+        <span class="section-label">เลือกเปิดลิงก์ Google Drive ที่เตรียมไว้</span>
+        <div class="preset-grid">
+          <button type="button" id="open-preset-1" class="preset-btn">
+            <span class="preset-btn-badge">ไฟล์ที่ 1 • Google Drive</span>
+            <span class="preset-btn-title">เปิดอ่านไฟล์ PDF ที่ 1</span>
+            <span class="preset-btn-meta">ID: 1DcudgQ-HGM56BwWm5pPQDrcBzyg4HuWu</span>
+          </button>
+          <button type="button" id="open-preset-2" class="preset-btn">
+            <span class="preset-btn-badge">ไฟล์ที่ 2 • Google Drive</span>
+            <span class="preset-btn-title">เปิดอ่านไฟล์ PDF ที่ 2</span>
+            <span class="preset-btn-meta">ID: 1mSAXynbWpRAVaa9kDhukFb27ldxSgQip</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="divider">หรือวางลิงก์ Google Drive อื่น / เลือกไฟล์จากเครื่อง</div>
+
+      <form id="drive-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="drive-url-input">ลิงก์ Google Drive หรือ URL ของไฟล์ PDF</label>
+          <div class="input-row">
+            <input
+              id="drive-url-input"
+              type="url"
+              class="text-input"
+              placeholder="วางลิงก์ที่คัดลอกจาก Google Drive ที่นี่..."
+              autocomplete="off"
+              required
+            >
+            <button type="submit" class="btn btn-primary">เปิดอ่าน</button>
+          </div>
+        </div>
+      </form>
+
+      <button type="button" id="pick-file-btn" class="btn btn-secondary">
+        เลือกไฟล์ PDF จากเครื่องโดยตรง (หรือลากไฟล์มาวางที่นี่)
+      </button>
+      <input id="file-input" type="file" accept="application/pdf,.pdf" class="file-input-hidden">
+
+      <div id="error-box" class="error-box" role="alert">
+        <div id="error-text"></div>
+      </div>
+
+      <div class="guide-hint">
+        <div class="guide-item">
+          <strong>แตะฝั่งซ้ายของหน้าจอ</strong>
+          ย้อนกลับไปหน้าก่อนหน้า (Previous Page)
+        </div>
+        <div class="guide-item">
+          <strong>แตะฝั่งขวาของหน้าจอ</strong>
+          ไปยังหน้าถัดไป (Next Page)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Minimal Top Bar (shown when tapping center of screen) -->
+  <header id="reader-topbar" class="reader-topbar">
+    <div class="topbar-left">
+      <div id="doc-title" class="doc-title">PDF Reader</div>
+      <div class="quick-switch-group">
+        <button type="button" id="top-preset-1" class="btn-switch-link">ลิงก์ที่ 1</button>
+        <button type="button" id="top-preset-2" class="btn-switch-link">ลิงก์ที่ 2</button>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" id="toggle-mode-btn" class="btn-compact">โหมด: แตะซ้าย-ขวา (Kindle)</button>
+      <button type="button" id="fullscreen-btn" class="btn-compact">เต็มจอ (Full Screen)</button>
+      <button type="button" id="change-file-btn" class="btn-compact">หน้าเลือกไฟล์</button>
+    </div>
+  </header>
+
+  <!-- Main Fullscreen Reader -->
+  <main class="reader-viewport" aria-label="พื้นที่อ่านหนังสือ">
+    <div class="canvas-stage">
+      <canvas id="pdf-canvas"></canvas>
+    </div>
+
+    <!-- Google Drive Fullscreen Reader Stage -->
+    <div id="embed-stage" class="embed-stage">
+      <div id="embed-frame-scroller" class="embed-frame-scroller">
+        <iframe id="embed-iframe" class="embed-iframe" allow="autoplay; fullscreen"></iframe>
+      </div>
+    </div>
+
+    <!-- Kindle Left 50% / Right 50% Touch Zones directly over PDF area -->
+    <div id="touch-overlay" class="touch-overlay">
+      <div id="zone-left" class="touch-zone touch-zone-left" title="แตะครึ่งซ้ายเพื่อไปหน้าก่อนหน้า" aria-label="หน้าก่อนหน้า">
+        <span class="zone-indicator">‹ หน้าก่อนหน้า</span>
+      </div>
+      <div id="zone-right" class="touch-zone touch-zone-right" title="แตะครึ่งขวาเพื่อไปหน้าถัดไป" aria-label="หน้าถัดไป">
+        <span class="zone-indicator">หน้าถัดไป ›</span>
+      </div>
+    </div>
+
+    <!-- Kindle Bottom Status Bar -->
+    <footer class="reader-footer">
+      <span id="footer-hint">แตะครึ่งซ้ายของ PDF: หน้าก่อนหน้า • แตะครึ่งขวาของ PDF: หน้าถัดไป</span>
+      <div class="footer-right">
+        <button type="button" id="floating-menu-pill" class="floating-menu-pill">
+          เมนู / เปลี่ยนไฟล์
+        </button>
+        <span id="page-indicator">หน้า 1</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay" aria-live="polite">
+    <div class="spinner"></div>
+    <span id="loading-text">กำลังเปิดไฟล์ PDF...</span>
+  </div>
+
+  <script>
+    // Configure PDF.js worker
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // Preset Google Drive links provided by the user
+    const PRESET_LINKS = {
+      1: {
+        label: 'ไฟล์ PDF ที่ 1 (Google Drive)',
+        url: 'https://drive.google.com/file/d/1DcudgQ-HGM56BwWm5pPQDrcBzyg4HuWu/view?'
+      },
+      2: {
+        label: 'ไฟล์ PDF ที่ 2 (Google Drive)',
+        url: 'https://drive.google.com/file/d/1mSAXynbWpRAVaa9kDhukFb27ldxSgQip/view?'
+      }
+    };
+
+    const setupScreen = document.getElementById('setup-screen');
+    const setupCard = document.getElementById('setup-card');
+    const openPreset1Btn = document.getElementById('open-preset-1');
+    const openPreset2Btn = document.getElementById('open-preset-2');
+    const topPreset1Btn = document.getElementById('top-preset-1');
+    const topPreset2Btn = document.getElementById('top-preset-2');
+    const driveForm = document.getElementById('drive-form');
+    const driveUrlInput = document.getElementById('drive-url-input');
+    const pickFileBtn = document.getElementById('pick-file-btn');
+    const fileInput = document.getElementById('file-input');
+    const errorBox = document.getElementById('error-box');
+    const errorText = document.getElementById('error-text');
+
+    const readerTopbar = document.getElementById('reader-topbar');
+    const docTitle = document.getElementById('doc-title');
+    const toggleModeBtn = document.getElementById('toggle-mode-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const changeFileBtn = document.getElementById('change-file-btn');
+    const floatingMenuPill = document.getElementById('floating-menu-pill');
+
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const embedStage = document.getElementById('embed-stage');
+    const embedFrameScroller = document.getElementById('embed-frame-scroller');
+    const embedIframe = document.getElementById('embed-iframe');
+    const touchOverlay = document.getElementById('touch-overlay');
+    const zoneLeft = document.getElementById('zone-left');
+    const zoneRight = document.getElementById('zone-right');
+    const pageIndicator = document.getElementById('page-indicator');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+
+    let readerMode = 'drive-embed'; // 'drive-embed' | 'pdfjs'
+    let kindleTapEnabled = true;
+    let pdfDoc = null;
+    let currentPage = 1;
+    let totalPages = 0;
+    let isRendering = false;
+    let pendingPage = null;
+    let activePresetId = null;
+
+    function showError(message) {
+      errorText.textContent = message;
+      errorBox.classList.add('visible');
+    }
+
+    function clearError() {
+      errorText.textContent = '';
+      errorBox.classList.remove('visible');
+    }
+
+    function setLoading(visible, text) {
+      if (text) loadingText.textContent = text;
+      loadingOverlay.classList.toggle('visible', visible);
+    }
+
+    function updatePresetHighlight(presetId) {
+      activePresetId = presetId;
+      topPreset1Btn.classList.toggle('active', presetId === 1);
+      topPreset2Btn.classList.toggle('active', presetId === 2);
+    }
+
+    // Extract Google Drive file ID from common share link formats
+    function extractGoogleDriveFileId(input) {
+      const trimmed = input.trim();
+      const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/
+      ];
+      for (const pattern of patterns) {
+        const match = trimmed.match(pattern);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    }
+
+    // Convert a Google Drive /view URL into an embeddable /preview URL at runtime
+    function buildPreviewUrlFromInput(rawUrl) {
+      const trimmed = rawUrl.trim();
+      if (trimmed.includes('/view')) {
+        return trimmed.replace(/\/view\??.*$/, '/preview');
+      }
+      const fileId = extractGoogleDriveFileId(trimmed);
+      try {
+        const parsed = new URL(trimmed);
+        if (fileId) {
+          return `${parsed.origin}/file/d/${fileId}/preview`;
+        }
+        return trimmed;
+      } catch (e) {
+        return trimmed;
+      }
+    }
+
+    // Fixed internal geometry for Google Drive /preview so fullscreen/resize never distorts page size
+    // Inside a 680px visible Drive preview viewport:
+    // - Left/right dark gutter is ~78px each side -> 524px white page width in the middle
+    // - Top header space before Page 1 is ~52px
+    // - Standard A4 page height at 524px width is ~741px, with 12px gap between pages (step = 753px)
+    // - Top & bottom trim crops strictly the middle of each page so top/bottom inter-page gaps never show
+    const DRIVE_IFRAME_VISIBLE_WIDTH = 680;
+    const DRIVE_HORIZONTAL_MARGIN = 78;
+    const DRIVE_PAGE_WIDTH = DRIVE_IFRAME_VISIBLE_WIDTH - DRIVE_HORIZONTAL_MARGIN * 2; // 524px middle width
+    const DRIVE_TOP_START_OFFSET = 52; // Top offset before Page 1 in Drive preview
+    const DRIVE_PAGE_GAP = 12; // Vertical gap between consecutive pages
+    const DRIVE_CROP_TOP_TRIM = 8; // Trim top edge so upper gap never appears
+    const DRIVE_CROP_BOTTOM_TRIM = 8; // Trim bottom edge so lower gap never appears
+    let driveSinglePageHeight = Math.round(DRIVE_PAGE_WIDTH * 1.4142857); // 741px full single page height
+
+    function tryEnterFullscreen() {
+      const docEl = document.documentElement;
+      if (!document.fullscreenElement && docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      }
+    }
+
+    // Crop strictly to the middle of 1 single page and scale to match the screen
+    function updateEmbedScrollPosition() {
+      if (!kindleTapEnabled) {
+        embedFrameScroller.style.width = '100%';
+        embedFrameScroller.style.height = '100%';
+        embedFrameScroller.style.transform = 'none';
+        embedIframe.style.transform = 'none';
+        return;
+      }
+
+      const footerHeight = 34;
+      const availHeight = Math.max(window.innerHeight - footerHeight - 8, 200);
+      const availWidth = Math.max(window.innerWidth - 8, 200);
+
+      // Visible window height takes only the middle of the page (excluding top & bottom trim)
+      const visibleMiddleHeight = Math.max(
+        driveSinglePageHeight - DRIVE_CROP_TOP_TRIM - DRIVE_CROP_BOTTOM_TRIM,
+        200
+      );
+
+      embedFrameScroller.style.width = `${DRIVE_PAGE_WIDTH}px`;
+      embedFrameScroller.style.height = `${visibleMiddleHeight}px`;
+
+      // Scale the cropped middle page window so it fills the screen in both normal and fullscreen
+      const scaleX = availWidth / DRIVE_PAGE_WIDTH;
+      const scaleY = availHeight / visibleMiddleHeight;
+      const fitScale = Math.min(scaleX, scaleY);
+      embedFrameScroller.style.transform = `scale(${fitScale.toFixed(4)})`;
+
+      // Step by full (1 page height + inter-page gap), then offset into the middle of that page
+      const pageStep = driveSinglePageHeight + DRIVE_PAGE_GAP;
+      const pageTopY = DRIVE_TOP_START_OFFSET + (currentPage - 1) * pageStep;
+      const middleCropY = pageTopY + DRIVE_CROP_TOP_TRIM;
+      embedIframe.style.transform = `translate(-${DRIVE_HORIZONTAL_MARGIN}px, -${middleCropY}px)`;
+      pageIndicator.textContent = `หน้า ${currentPage}`;
+    }
+
+    function setKindleTapMode(enabled) {
+      kindleTapEnabled = enabled;
+      if (readerMode === 'drive-embed') {
+        embedStage.classList.toggle('free-scroll-mode', !enabled);
+        touchOverlay.classList.toggle('hidden', !enabled);
+        floatingMenuPill.classList.add('visible');
+        toggleModeBtn.textContent = enabled
+          ? 'โหมด: แตะซ้าย-ขวา (Kindle)'
+          : 'โหมด: เลื่อนอิสระ (Google Drive)';
+        updateEmbedScrollPosition();
+      }
+    }
+
+    // Open Google Drive link directly in fullscreen with Kindle tap zones
+    function openGoogleDriveLink(rawUrl, customLabel, presetId = null) {
+      clearError();
+      tryEnterFullscreen();
+      const previewUrl = buildPreviewUrlFromInput(rawUrl);
+      const fileId = extractGoogleDriveFileId(rawUrl);
+
+      readerMode = 'drive-embed';
+      pdfDoc = null;
+      currentPage = 1;
+      totalPages = 0;
+      updatePresetHighlight(presetId);
+
+      setLoading(true, 'กำลังเปิดเอกสารจาก Google Drive...');
+      embedStage.classList.add('visible');
+      toggleModeBtn.style.display = 'inline-flex';
+      floatingMenuPill.classList.add('visible');
+      setKindleTapMode(true);
+      embedIframe.src = previewUrl;
+
+      docTitle.textContent =
+        customLabel || (fileId ? `Google Drive (${fileId})` : 'Google Drive PDF');
+      setupScreen.classList.add('hidden');
+      readerTopbar.classList.remove('visible');
+
+      embedIframe.onload = () => {
+        updateEmbedScrollPosition();
+        setLoading(false);
+      };
+      setTimeout(() => {
+        updateEmbedScrollPosition();
+        setLoading(false);
+      }, 1200);
+    }
+
+    async function renderPage(pageNum) {
+      if (!pdfDoc) return;
+      isRendering = true;
+
+      try {
+        const page = await pdfDoc.getPage(pageNum);
+        const stage = canvas.parentElement;
+        const availableWidth = Math.max(stage.clientWidth - 24, 200);
+        const availableHeight = Math.max(stage.clientHeight - 48, 200);
+
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const scaleX = availableWidth / unscaledViewport.width;
+        const scaleY = availableHeight / unscaledViewport.height;
+        const fitScale = Math.min(scaleX, scaleY);
+
+        const dpr = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale: fitScale * dpr });
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        canvas.style.width = `${Math.floor(viewport.width / dpr)}px`;
+        canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        }).promise;
+
+        pageIndicator.textContent = `หน้า ${currentPage} / ${totalPages}`;
+      } finally {
+        isRendering = false;
+        if (pendingPage !== null) {
+          const next = pendingPage;
+          pendingPage = null;
+          renderPage(next);
+        }
+      }
+    }
+
+    function queueRenderPage(pageNum) {
+      if (isRendering) {
+        pendingPage = pageNum;
+      } else {
+        renderPage(pageNum);
+      }
+    }
+
+    function flashZone(zoneEl) {
+      zoneEl.classList.add('active-tap');
+      setTimeout(() => {
+        zoneEl.classList.remove('active-tap');
+      }, 220);
+    }
+
+    function goNextPage() {
+      flashZone(zoneRight);
+      readerTopbar.classList.remove('visible');
+
+      if (readerMode === 'pdfjs') {
+        if (!pdfDoc || currentPage >= totalPages) return;
+        currentPage += 1;
+        queueRenderPage(currentPage);
+      } else if (readerMode === 'drive-embed') {
+        currentPage += 1;
+        updateEmbedScrollPosition();
+      }
+    }
+
+    function goPrevPage() {
+      flashZone(zoneLeft);
+      readerTopbar.classList.remove('visible');
+
+      if (readerMode === 'pdfjs') {
+        if (!pdfDoc || currentPage <= 1) return;
+        currentPage -= 1;
+        queueRenderPage(currentPage);
+      } else if (readerMode === 'drive-embed') {
+        if (currentPage <= 1) return;
+        currentPage -= 1;
+        updateEmbedScrollPosition();
+      }
+    }
+
+    async function openPdfFromDocument(loadedPdf, label) {
+      readerMode = 'pdfjs';
+      pdfDoc = loadedPdf;
+      totalPages = pdfDoc.numPages;
+      currentPage = 1;
+      updatePresetHighlight(null);
+
+      embedIframe.removeAttribute('src');
+      embedStage.classList.remove('visible');
+      floatingMenuPill.classList.add('visible');
+      toggleModeBtn.style.display = 'none';
+      touchOverlay.classList.remove('hidden');
+
+      docTitle.textContent = label || 'เอกสาร PDF';
+      setupScreen.classList.add('hidden');
+      readerTopbar.classList.remove('visible');
+      await renderPage(currentPage);
+    }
+
+    async function loadPdfFromLocalFile(file) {
+      clearError();
+      if (!file) return;
+      setLoading(true, 'กำลังเปิดไฟล์ PDF...');
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+        const loadedPdf = await loadingTask.promise;
+        await openPdfFromDocument(loadedPdf, file.name);
+      } catch (err) {
+        showError('ไม่สามารถอ่านไฟล์ PDF นี้ได้ กรุณาตรวจสอบว่าไฟล์ไม่เสียหาย');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Preset buttons (Link 1 & Link 2) on Setup Screen
+    openPreset1Btn.addEventListener('click', () => {
+      openGoogleDriveLink(PRESET_LINKS[1].url, PRESET_LINKS[1].label, 1);
+    });
+
+    openPreset2Btn.addEventListener('click', () => {
+      openGoogleDriveLink(PRESET_LINKS[2].url, PRESET_LINKS[2].label, 2);
+    });
+
+    // Quick-switch buttons (Link 1 & Link 2) in Top Bar
+    topPreset1Btn.addEventListener('click', () => {
+      openGoogleDriveLink(PRESET_LINKS[1].url, PRESET_LINKS[1].label, 1);
+    });
+
+    topPreset2Btn.addEventListener('click', () => {
+      openGoogleDriveLink(PRESET_LINKS[2].url, PRESET_LINKS[2].label, 2);
+    });
+
+    // Form submission for any custom Google Drive link
+    driveForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const urlValue = driveUrlInput.value.trim();
+      if (!urlValue) {
+        showError('กรุณาวางลิงก์ Google Drive หรือเลือกปุ่มไฟล์ที่ 1 / ไฟล์ที่ 2 ด้านบน');
+        return;
+      }
+      openGoogleDriveLink(urlValue, null, null);
+    });
+
+    // Local PDF fallback picker
+    pickFileBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        loadPdfFromLocalFile(file);
+      }
+    });
+
+    // Drag and drop PDF support on Setup Card
+    setupCard.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      setupCard.classList.add('drag-over');
+    });
+
+    setupCard.addEventListener('dragleave', () => {
+      setupCard.classList.remove('drag-over');
+    });
+
+    setupCard.addEventListener('drop', (e) => {
+      e.preventDefault();
+      setupCard.classList.remove('drag-over');
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) {
+        loadPdfFromLocalFile(file);
+      }
+    });
+
+    // Kindle-style touch/click navigation (50% Left / 50% Right directly over PDF)
+    zoneRight.addEventListener('click', () => {
+      goNextPage();
+    });
+
+    zoneLeft.addEventListener('click', () => {
+      goPrevPage();
+    });
+
+    toggleModeBtn.addEventListener('click', () => {
+      setKindleTapMode(!kindleTapEnabled);
+    });
+
+    floatingMenuPill.addEventListener('click', () => {
+      if (!kindleTapEnabled && readerMode === 'drive-embed') {
+        setKindleTapMode(true);
+      }
+      readerTopbar.classList.toggle('visible');
+    });
+
+    // Keyboard navigation support (Left/Right arrows)
+    window.addEventListener('keydown', (e) => {
+      if (!setupScreen.classList.contains('hidden')) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        goNextPage();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        goPrevPage();
+      }
+    });
+
+    // Re-fit page on window resize / orientation change
+    window.addEventListener('resize', () => {
+      if (setupScreen.classList.contains('hidden')) {
+        if (readerMode === 'pdfjs' && pdfDoc) {
+          queueRenderPage(currentPage);
+        } else if (readerMode === 'drive-embed') {
+          updateEmbedScrollPosition();
+        }
+      }
+    });
+
+    // Top bar controls
+    changeFileBtn.addEventListener('click', () => {
+      setupScreen.classList.remove('hidden');
+      readerTopbar.classList.remove('visible');
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+      const docEl = document.documentElement;
+      if (!document.fullscreenElement && docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+  </script>
+</body>
+</html>
