@@ -1,0 +1,2149 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Beginner Phonics Books - Reader</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4fbfb;
+      --surface: #ffffff;
+      --reader-bg: #323639;
+      --ink: #22252a;
+      --muted: #525866;
+      --border: #d5e6e8;
+      --teal: #1d7c8a;
+      --teal-dark: #155e69;
+      --teal-soft: #e6f6f8;
+      --mint-border: #8cf09b;
+      --brand: #2b2925;
+      --brand-ink: #ffffff;
+      --accent: #1d7c8a;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(21, 94, 105, 0.1);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      background: var(--reader-bg);
+      color: var(--ink);
+      user-select: none;
+    }
+
+    /* Progressive Phonics Home Screen */
+    .setup-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 28px 20px 40px;
+      background: linear-gradient(180deg, #eefaf8 0%, #f8fcfd 100%);
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    .setup-screen.hidden {
+      display: none;
+    }
+
+    .setup-card {
+      width: 100%;
+      max-width: 920px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 32px 36px;
+      margin: auto;
+    }
+
+    .phonics-main-title {
+      margin: 0 0 22px 0;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      border-bottom: 2px solid var(--teal-soft);
+      padding-bottom: 14px;
+    }
+
+    /* Hero Section matching attached Progressive Phonics document */
+    .phonics-hero {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 28px;
+      align-items: start;
+      margin-bottom: 32px;
+    }
+
+    .phonics-hero-illustration {
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 6px solid var(--mint-border);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      background: #67afb8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phonics-hero-illustration img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .phonics-hero-content h2 {
+      margin: 0 0 8px 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--teal);
+    }
+
+    .phonics-hero-lead {
+      margin: 0 0 12px 0;
+      font-size: 14.5px;
+      color: #333740;
+      font-weight: 500;
+    }
+
+    .phonics-feature-list {
+      margin: 0 0 14px 0;
+      padding-left: 20px;
+      font-size: 14px;
+      color: #3b4049;
+      line-height: 1.65;
+    }
+
+    .phonics-feature-list li {
+      margin-bottom: 4px;
+    }
+
+    .phonics-feature-list li::marker {
+      color: var(--teal);
+    }
+
+    .phonics-free-tag {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--teal-dark);
+    }
+
+    /* Book Selection Cards (Beginner Books 1 to 5) */
+    .books-section {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .books-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .books-section-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .books-section-hint {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .book-card-btn {
+      font: inherit;
+      text-align: left;
+      padding: 18px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbfc 100%);
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+    }
+
+    .book-card-btn:hover {
+      border-color: var(--teal);
+      box-shadow: 0 8px 22px rgba(29, 124, 138, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .book-card-btn:active {
+      transform: scale(0.99);
+    }
+
+    .book-cover-wrap {
+      width: 124px;
+      height: 130px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      background: #e9f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .book-cover-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .book-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .book-card-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .book-card-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--teal-soft);
+      color: var(--teal-dark);
+      letter-spacing: 0.02em;
+    }
+
+    .book-card-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+    }
+
+    .book-card-subtitle {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--teal);
+    }
+
+    .book-card-path {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .book-card-progress {
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .book-card-cta {
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--teal-dark);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-pill.unread {
+      background: #f1f4f6;
+      color: #5f6775;
+    }
+
+    .status-pill.reading {
+      background: #fff4db;
+      color: #9a5b00;
+    }
+
+    .status-pill.completed {
+      background: #dff6e4;
+      color: #166534;
+    }
+
+    /* Reading Record Section on Home Screen */
+    .records-section {
+      margin-top: 28px;
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .records-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .records-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .btn-clear-records {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .btn-clear-records:hover {
+      background: #fef3f2;
+      color: #b42318;
+      border-color: #fecdca;
+    }
+
+    .records-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .records-table th {
+      background: #f3f9fa;
+      color: var(--ink);
+      font-weight: 700;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .records-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--ink);
+    }
+
+    .records-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .records-table tbody tr:hover {
+      background: #f9fdfd;
+    }
+
+    .history-times-list {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      max-height: 88px;
+      overflow-y: auto;
+    }
+
+    .history-empty {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .record-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-toggle-complete {
+      font: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-toggle-complete:hover {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+    }
+
+    /* Reader Container */
+    .reader-viewport {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #323639;
+      overflow: hidden;
+      padding-bottom: 36px;
+    }
+
+    /* Primary (0,0) Vector PDF.js Canvas Stage */
+    .canvas-stage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 18px;
+      bottom: 36px;
+      width: calc(100vw - 18px);
+      height: calc(100vh - 36px);
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #323639;
+      pointer-events: none;
+    }
+
+    .canvas-stage.hidden {
+      display: none;
+    }
+
+    #pdf-canvas {
+      display: block;
+      background: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      transform: translateY(0);
+      will-change: transform;
+    }
+
+    /* Fallback Google Drive Frameless Viewer Stage (used only if local books/*.pdf is not found in preview) */
+    .embed-stage {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 36px;
+      width: 100vw;
+      height: calc(100vh - 36px);
+      z-index: 8;
+      background: #323639;
+      overflow: hidden;
+      pointer-events: none;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .embed-stage.visible {
+      display: flex;
+    }
+
+    .embed-frame-scroller {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+      background: #323639;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      justify-content: center;
+    }
+
+    .embed-iframe {
+      position: relative;
+      width: 680px;
+      height: 40000px;
+      border: 0;
+      display: block;
+      background: #323639;
+      transform: translateY(0);
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+      flex-shrink: 0;
+      will-change: transform;
+    }
+
+    .embed-iframe.scrolling-active {
+      transition: none !important;
+    }
+
+    .embed-stage.free-scroll-mode,
+    .embed-stage.free-scroll-mode .embed-frame-scroller,
+    .embed-stage.free-scroll-mode .embed-iframe {
+      pointer-events: auto;
+    }
+
+    .embed-stage.free-scroll-mode .embed-frame-scroller {
+      width: 100% !important;
+      height: 100% !important;
+      transform: none !important;
+      border-radius: 0;
+    }
+
+    .embed-stage.free-scroll-mode .embed-iframe {
+      position: static;
+      width: 100% !important;
+      height: 100% !important;
+      transform: none !important;
+    }
+
+    /* Kindle Touch Zones: Split 50% Left / 50% Right directly over the PDF */
+    .touch-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 18px;
+      bottom: 36px;
+      z-index: 15;
+      display: grid;
+      grid-template-columns: 50% 50%;
+      width: calc(100% - 18px);
+      height: calc(100vh - 36px);
+      pointer-events: auto;
+    }
+
+    .touch-overlay.hidden {
+      display: none;
+    }
+
+    .touch-zone {
+      height: 100%;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.001);
+      touch-action: none;
+    }
+
+    .touch-zone-left {
+      justify-content: flex-start;
+      padding-left: 20px;
+      border-right: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .touch-zone-right {
+      justify-content: flex-end;
+      padding-right: 20px;
+    }
+
+    .zone-indicator {
+      opacity: 0;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(28, 27, 24, 0.78);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+
+    .touch-zone.active-tap {
+      background: rgba(28, 27, 24, 0.04);
+    }
+
+    .touch-zone.active-tap .zone-indicator {
+      opacity: 1;
+    }
+
+    /* Right-edge vertical scroll bar for scrolling within the current page */
+    .page-scroll-rail {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 36px;
+      width: 18px;
+      z-index: 20;
+      background: rgba(235, 230, 220, 0.85);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    .page-scroll-rail.hidden {
+      display: none;
+    }
+
+    .page-scroll-slider {
+      writing-mode: vertical-lr;
+      direction: rtl;
+      appearance: slider-vertical;
+      width: 14px;
+      height: 100%;
+      margin: 0;
+      cursor: ns-resize;
+      accent-color: var(--teal);
+    }
+
+    /* Compact buttons inside bottom footer */
+    .floating-menu-pill {
+      display: none;
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      font: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .floating-menu-pill:hover {
+      background: var(--teal-soft);
+      border-color: var(--teal);
+    }
+
+    .floating-menu-pill.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-finish-book {
+      font: inherit;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-finish-book:hover {
+      border-color: var(--teal);
+    }
+
+    .btn-finish-book.done {
+      background: #166534;
+      color: #ffffff;
+      border-color: #166534;
+    }
+
+    /* Minimal Top Bar */
+    .reader-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(6px);
+      transform: translateY(-100%);
+      transition: transform 0.2s ease;
+      flex-wrap: wrap;
+    }
+
+    .reader-topbar.visible {
+      transform: translateY(0);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .doc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+
+    .quick-switch-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-switch-link {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .btn-switch-link.active {
+      background: var(--teal);
+      color: var(--brand-ink);
+      border-color: var(--teal);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-compact {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .btn-compact:hover {
+      background: var(--bg);
+    }
+
+    /* Kindle Bottom Status Bar */
+    .reader-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 36px;
+      z-index: 24;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 14px;
+      font-size: 12px;
+      background: rgba(244, 241, 234, 0.96);
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      pointer-events: auto;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .btn-scroll-step {
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .btn-scroll-step:hover {
+      background: var(--teal-soft);
+      border-color: var(--teal);
+    }
+
+    .cache-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--teal-soft);
+      color: var(--teal-dark);
+    }
+
+    .cache-badge.hidden {
+      display: none;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 28;
+      background: rgba(244, 241, 234, 0.92);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .loading-overlay.visible {
+      display: flex;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 720px) {
+      .setup-card {
+        padding: 22px 18px;
+      }
+      .phonics-main-title {
+        font-size: 26px;
+      }
+      .phonics-hero {
+        grid-template-columns: 1fr;
+      }
+      .phonics-hero-illustration {
+        max-width: 260px;
+        margin: 0 auto;
+      }
+      .preset-grid {
+        grid-template-columns: 1fr;
+      }
+      .footer-left {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Progressive Phonics Home Screen -->
+  <section id="setup-screen" class="setup-screen" aria-label="Beginner Phonics Books">
+    <div id="setup-card" class="setup-card">
+      <h1 class="phonics-main-title">Beginner Phonics Books</h1>
+
+      <div class="phonics-hero">
+        <div class="phonics-hero-illustration">
+          <img
+            src="images/Title.webp"
+            data-preview-fallback="data:image/png;base64,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"
+            onerror="if(this.dataset.previewFallback){this.src=this.dataset.previewFallback;this.removeAttribute('data-preview-fallback');}"
+            alt="Beginner Phonics Books Illustration"
+            decoding="async"
+          >
+        </div>
+        <div class="phonics-hero-content">
+          <h2>Reading Made Easy!</h2>
+          <p class="phonics-hero-lead">The easiest and "free-est" phonics program just got better!</p>
+          <ul class="phonics-feature-list">
+            <li>New stories (except for a few old favorites)</li>
+            <li>Upgraded illustrations</li>
+            <li>New, improved learning sequence</li>
+            <li>Easy-to-read on tablets and smart phones</li>
+            <li>Lots of Activity worksheets -- mazes, coloring pages, spot the differences, word tracing, etc.</li>
+            <li>Brand new, comprehensive handwriting program with printable instructions and worksheets.</li>
+            <li>Lesson plans and teaching tools</li>
+            <li>Optimized for English Language Learners who are not only learning a new language, but a new alphabet as well.</li>
+          </ul>
+          <p class="phonics-free-tag">And all 100% FREE!</p>
+        </div>
+      </div>
+
+      <!-- Beginner Books 1 to 5 Selection -->
+      <div class="books-section">
+        <div class="books-section-header">
+          <h3 class="books-section-title">เลือกหนังสือเพื่อเปิดอ่าน (Kindle Mode • เริ่มที่พิกัด 0,0 ทุกหน้า)</h3>
+          <span class="books-section-hint">แตะขวา = หน้าถัดไป (Pre-rendered) • แตะซ้าย = หน้าก่อนหน้า • เปิดต่อจากหน้าที่อ่านค้างไว้</span>
+        </div>
+        <div class="preset-grid">
+          <button type="button" id="open-preset-1" class="book-card-btn">
+            <div class="book-cover-wrap">
+              <img
+                src="images/Icon_book1_b.webp"
+                data-preview-fallback="data:image/png;base64,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"
+                onerror="if(this.dataset.previewFallback){this.src=this.dataset.previewFallback;this.removeAttribute('data-preview-fallback');}"
+                alt="Beginner Book 1 - Short Vowel A"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
+            <div class="book-card-info">
+              <div class="book-card-top-row">
+                <span class="book-card-badge">BOOK 1</span>
+                <span id="card-status-1" class="status-pill unread">ยังไม่ได้อ่าน</span>
+              </div>
+              <span class="book-card-title">Beginner Book 1</span>
+              <span class="book-card-subtitle">Short Vowel "A" (had, cat, am, can)</span>
+              <span class="book-card-path">books/Book_1_B.pdf</span>
+              <span id="card-progress-1" class="book-card-progress">ยังไม่มีประวัติการเปิดอ่าน</span>
+              <span id="card-cta-1" class="book-card-cta">เปิดอ่าน ›</span>
+            </div>
+          </button>
+
+          <button type="button" id="open-preset-2" class="book-card-btn">
+            <div class="book-cover-wrap">
+              <img
+                src="images/Icon_book2_b.webp"
+                data-preview-fallback="data:image/png;base64,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"
+                onerror="if(this.dataset.previewFallback){this.src=this.dataset.previewFallback;this.removeAttribute('data-preview-fallback');}"
+                alt="Beginner Book 2 - Short Vowel E"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
+            <div class="book-card-info">
+              <div class="book-card-top-row">
+                <span class="book-card-badge">BOOK 2</span>
+                <span id="card-status-2" class="status-pill unread">ยังไม่ได้อ่าน</span>
+              </div>
+              <span class="book-card-title">Beginner Book 2</span>
+              <span class="book-card-subtitle">Short Vowel "E" (ten, red, get)</span>
+              <span class="book-card-path">books/Book_2_B.pdf</span>
+              <span id="card-progress-2" class="book-card-progress">ยังไม่มีประวัติการเปิดอ่าน</span>
+              <span id="card-cta-2" class="book-card-cta">เปิดอ่าน ›</span>
+            </div>
+          </button>
+
+          <button type="button" id="open-preset-3" class="book-card-btn">
+            <div class="book-cover-wrap">
+              <img
+                src="images/Icon_book3_b.webp"
+                data-preview-fallback="data:image/png;base64,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"
+                onerror="if(this.dataset.previewFallback){this.src=this.dataset.previewFallback;this.removeAttribute('data-preview-fallback');}"
+                alt="Beginner Book 3 - Short Vowel I"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
+            <div class="book-card-info">
+              <div class="book-card-top-row">
+                <span class="book-card-badge">BOOK 3</span>
+                <span id="card-status-3" class="status-pill unread">ยังไม่ได้อ่าน</span>
+              </div>
+              <span class="book-card-title">Beginner Book 3</span>
+              <span class="book-card-subtitle">Short Vowel "I" (six, big, in)</span>
+              <span class="book-card-path">books/Book_3_B.pdf</span>
+              <span id="card-progress-3" class="book-card-progress">ยังไม่มีประวัติการเปิดอ่าน</span>
+              <span id="card-cta-3" class="book-card-cta">เปิดอ่าน ›</span>
+            </div>
+          </button>
+
+          <button type="button" id="open-preset-4" class="book-card-btn">
+            <div class="book-cover-wrap">
+              <img
+                src="images/Icon_book4_b.webp"
+                data-preview-fallback="data:image/png;base64,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"
+                onerror="if(this.dataset.previewFallback){this.src=this.dataset.previewFallback;this.removeAttribute('data-preview-fallback');}"
+                alt="Beginner Book 4 - Short Vowel O"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
+            <div class="book-card-info">
+              <div class="book-card-top-row">
+                <span class="book-card-badge">BOOK 4</span>
+                <span id="card-status-4" class="status-pill unread">ยังไม่ได้อ่าน</span>
+              </div>
+              <span class="book-card-title">Beginner Book 4</span>
+              <span class="book-card-subtitle">Short Vowel "O" (dog, fox, pot)</span>
+              <span class="book-card-path">books/Book_4_B.pdf</span>
+              <span id="card-progress-4" class="book-card-progress">ยังไม่มีประวัติการเปิดอ่าน</span>
+              <span id="card-cta-4" class="book-card-cta">เปิดอ่าน ›</span>
+            </div>
+          </button>
+
+          <button type="button" id="open-preset-5" class="book-card-btn">
+            <div class="book-cover-wrap">
+              <img
+                src="images/Icon_book5_b.webp"
+                data-preview-fallback="data:image/png;base64,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"
+                onerror="if(this.dataset.previewFallback){this.src=this.dataset.previewFallback;this.removeAttribute('data-preview-fallback');}"
+                alt="Beginner Book 5 - Short Vowel U"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
+            <div class="book-card-info">
+              <div class="book-card-top-row">
+                <span class="book-card-badge">BOOK 5</span>
+                <span id="card-status-5" class="status-pill unread">ยังไม่ได้อ่าน</span>
+              </div>
+              <span class="book-card-title">Beginner Book 5</span>
+              <span class="book-card-subtitle">Short Vowel "U" (bug, cup, sun)</span>
+              <span class="book-card-path">books/Book_5_B.pdf</span>
+              <span id="card-progress-5" class="book-card-progress">ยังไม่มีประวัติการเปิดอ่าน</span>
+              <span id="card-cta-5" class="book-card-cta">เปิดอ่าน ›</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reading Record Table Section -->
+      <div class="records-section">
+        <div class="records-header">
+          <h3 class="records-title">บันทึกการอ่าน (Reading Records • เก็บประวัติ 30 ครั้งล่าสุดต่อเล่ม)</h3>
+          <button type="button" id="clear-records-btn" class="btn-clear-records">ล้างประวัติการอ่านทั้งหมด</button>
+        </div>
+        <div class="records-table-wrap">
+          <table class="records-table" aria-label="ตารางบันทึกการอ่านหนังสือ">
+            <thead>
+              <tr>
+                <th>หนังสือ</th>
+                <th>สถานะ (อ่านจบหรือยัง)</th>
+                <th>หน้าที่อ่านถึง</th>
+                <th>ประวัติวัน-เวลาที่เปิดอ่าน</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="records-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Minimal Top Bar -->
+  <header id="reader-topbar" class="reader-topbar">
+    <div class="topbar-left">
+      <div id="doc-title" class="doc-title">Beginner Phonics Books</div>
+      <div class="quick-switch-group">
+        <button type="button" id="top-preset-1" class="btn-switch-link">Beginner Book 1</button>
+        <button type="button" id="top-preset-2" class="btn-switch-link">Beginner Book 2</button>
+        <button type="button" id="top-preset-3" class="btn-switch-link">Beginner Book 3</button>
+        <button type="button" id="top-preset-4" class="btn-switch-link">Beginner Book 4</button>
+        <button type="button" id="top-preset-5" class="btn-switch-link">Beginner Book 5</button>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" id="toggle-mode-btn" class="btn-compact">โหมด: แตะซ้าย-ขวา (Kindle)</button>
+      <button type="button" id="fullscreen-btn" class="btn-compact">เต็มจอ (Full Screen)</button>
+      <button type="button" id="change-file-btn" class="btn-compact">หน้าเลือกหนังสือ / ดูบันทึก</button>
+    </div>
+  </header>
+
+  <!-- Main Reader -->
+  <main class="reader-viewport" aria-label="พื้นที่อ่านหนังสือ">
+    <!-- Primary PDF.js (0,0) Single-Page Vector Canvas Stage -->
+    <div id="canvas-stage" class="canvas-stage hidden">
+      <canvas id="pdf-canvas"></canvas>
+    </div>
+
+    <!-- Fallback Google Drive Stage (used only when running in preview before books/ folder is hosted) -->
+    <div id="embed-stage" class="embed-stage">
+      <div id="embed-frame-scroller" class="embed-frame-scroller">
+        <iframe id="embed-iframe" class="embed-iframe" allow="autoplay; fullscreen"></iframe>
+      </div>
+    </div>
+
+    <!-- Kindle Left 50% / Right 50% Touch Zones directly over PDF area -->
+    <div id="touch-overlay" class="touch-overlay">
+      <div id="zone-left" class="touch-zone touch-zone-left" title="แตะครึ่งซ้ายเพื่อไปหน้าก่อนหน้า" aria-label="หน้าก่อนหน้า">
+        <span class="zone-indicator">‹ หน้าก่อนหน้า</span>
+      </div>
+      <div id="zone-right" class="touch-zone touch-zone-right" title="แตะครึ่งขวาเพื่อไปหน้าถัดไป" aria-label="หน้าถัดไป">
+        <span class="zone-indicator">หน้าถัดไป ›</span>
+      </div>
+    </div>
+
+    <!-- Right-side Vertical Scroll Rail for fine-scrolling within each page -->
+    <div id="page-scroll-rail" class="page-scroll-rail" title="เลื่อนขึ้น-ลงภายในหน้านี้">
+      <input
+        id="page-scroll-slider"
+        type="range"
+        min="-600"
+        max="600"
+        step="2"
+        value="0"
+        class="page-scroll-slider"
+        aria-label="เลื่อนตำแหน่งหน้าขึ้นลง"
+      >
+    </div>
+
+    <!-- Kindle Bottom Status Bar -->
+    <footer class="reader-footer">
+      <div class="footer-left">
+        <span id="footer-hint">แตะซ้าย/ขวา: เปลี่ยนหน้า • หมุนลูกกลิ้ง/ลากขึ้น-ลง: เลื่อนดูในหน้า</span>
+        <span id="lookahead-badge" class="cache-badge hidden">Pre-rendered หน้าถัดไป ✓</span>
+      </div>
+      <div class="footer-right">
+        <button type="button" id="scroll-up-btn" class="btn-scroll-step" title="เลื่อนหน้าขึ้น">▲ เลื่อนขึ้น</button>
+        <button type="button" id="scroll-down-btn" class="btn-scroll-step" title="เลื่อนหน้าลง">▼ เลื่อนลง</button>
+        <button type="button" id="finish-book-btn" class="btn-finish-book" title="บันทึกสถานะว่าอ่านจบเล่มนี้แล้ว">
+          ทำเครื่องหมายว่าอ่านจบ
+        </button>
+        <button type="button" id="floating-menu-pill" class="floating-menu-pill">
+          เมนู / เปลี่ยนไฟล์
+        </button>
+        <span id="page-indicator">หน้า 1</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay" aria-live="polite">
+    <div class="spinner"></div>
+    <span id="loading-text">กำลังเปิดหนังสือ...</span>
+  </div>
+
+  <script>
+    // Configure PDF.js worker
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // Books configuration:
+    // - Reads from books/Book_1_B.pdf .. books/Book_5_B.pdf for true (0,0) single-page vector rendering
+    // - Keeps Google Drive share links as fallback when previewed outside the books/ folder
+    const PRESET_LINKS = {
+      1: {
+        id: 1,
+        shortTitle: 'Beginner Book 1',
+        subtitle: 'Short Vowel "A"',
+        label: 'Beginner Book 1 (Short Vowel "A")',
+        pdfPath: 'books/Book_1_B.pdf',
+        iconPath: 'images/Icon_book1_b.webp',
+        url: 'https://drive.google.com/file/d/1DcudgQ-HGM56BwWm5pPQDrcBzyg4HuWu/view?'
+      },
+      2: {
+        id: 2,
+        shortTitle: 'Beginner Book 2',
+        subtitle: 'Short Vowel "E"',
+        label: 'Beginner Book 2 (Short Vowel "E")',
+        pdfPath: 'books/Book_2_B.pdf',
+        iconPath: 'images/Icon_book2_b.webp',
+        url: 'https://drive.google.com/file/d/1mSAXynbWpRAVaa9kDhukFb27ldxSgQip/view?'
+      },
+      3: {
+        id: 3,
+        shortTitle: 'Beginner Book 3',
+        subtitle: 'Short Vowel "I"',
+        label: 'Beginner Book 3 (Short Vowel "I")',
+        pdfPath: 'books/Book_3_B.pdf',
+        iconPath: 'images/Icon_book3_b.webp',
+        url: 'https://drive.google.com/file/d/1ksZhelNY2bYV-piIFWKoPgZhBJ-RPMNX/view'
+      },
+      4: {
+        id: 4,
+        shortTitle: 'Beginner Book 4',
+        subtitle: 'Short Vowel "O"',
+        label: 'Beginner Book 4 (Short Vowel "O")',
+        pdfPath: 'books/Book_4_B.pdf',
+        iconPath: 'images/Icon_book4_b.webp',
+        url: 'https://drive.google.com/file/d/1F01JtmPjbjiZ-euGPYGRNiUf1IwNyqJd/view'
+      },
+      5: {
+        id: 5,
+        shortTitle: 'Beginner Book 5',
+        subtitle: 'Short Vowel "U"',
+        label: 'Beginner Book 5 (Short Vowel "U")',
+        pdfPath: 'books/Book_5_B.pdf',
+        iconPath: 'images/Icon_book5_b.webp',
+        url: 'https://drive.google.com/file/d/15aqCbZBd2qIv95CGheaiEwzSarZtLN7i/view'
+      }
+    };
+
+    const STORAGE_KEY = 'phonics_kindle_reading_records_v1';
+    const MAX_OPEN_HISTORY = 30; // Cap openHistory to 30 entries per book to keep storage compact
+    const SAVE_DEBOUNCE_MS = 500; // Debounce localStorage writes during fast page turns
+
+    let saveDebounceTimer = null;
+
+    function createEmptyRecords() {
+      const initial = {};
+      for (const id of [1, 2, 3, 4, 5]) {
+        initial[id] = {
+          openHistory: [],
+          lastPage: 0,
+          maxPage: 0,
+          completed: false,
+          completedAt: null
+        };
+      }
+      return initial;
+    }
+
+    let readingRecords = createEmptyRecords();
+
+    function loadReadingRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          for (const id of [1, 2, 3, 4, 5]) {
+            if (parsed[id]) {
+              const rawHistory = Array.isArray(parsed[id].openHistory) ? parsed[id].openHistory : [];
+              readingRecords[id] = {
+                openHistory: rawHistory.slice(-MAX_OPEN_HISTORY),
+                lastPage: Number(parsed[id].lastPage) || 0,
+                maxPage: Number(parsed[id].maxPage) || 0,
+                completed: Boolean(parsed[id].completed),
+                completedAt: parsed[id].completedAt || null
+              };
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback to in-memory records
+      }
+    }
+
+    function flushReadingRecordsToStorage() {
+      if (saveDebounceTimer) {
+        clearTimeout(saveDebounceTimer);
+        saveDebounceTimer = null;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(readingRecords));
+      } catch (e) {
+        // Best-effort storage
+      }
+    }
+
+    // Debounced save to avoid excessive synchronous JSON.stringify + localStorage writes
+    function scheduleSaveReadingRecords(immediate = false) {
+      if (immediate) {
+        flushReadingRecordsToStorage();
+        return;
+      }
+      if (saveDebounceTimer) {
+        clearTimeout(saveDebounceTimer);
+      }
+      saveDebounceTimer = setTimeout(() => {
+        saveDebounceTimer = null;
+        flushReadingRecordsToStorage();
+      }, SAVE_DEBOUNCE_MS);
+    }
+
+    window.addEventListener('pagehide', flushReadingRecordsToStorage);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        flushReadingRecordsToStorage();
+      }
+    });
+
+    function formatThaiDateTime(isoStr) {
+      if (!isoStr) return '-';
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleString('th-TH', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      } catch (e) {
+        return isoStr;
+      }
+    }
+
+    const setupScreen = document.getElementById('setup-screen');
+    const openPreset1Btn = document.getElementById('open-preset-1');
+    const openPreset2Btn = document.getElementById('open-preset-2');
+    const openPreset3Btn = document.getElementById('open-preset-3');
+    const openPreset4Btn = document.getElementById('open-preset-4');
+    const openPreset5Btn = document.getElementById('open-preset-5');
+    const topPreset1Btn = document.getElementById('top-preset-1');
+    const topPreset2Btn = document.getElementById('top-preset-2');
+    const topPreset3Btn = document.getElementById('top-preset-3');
+    const topPreset4Btn = document.getElementById('top-preset-4');
+    const topPreset5Btn = document.getElementById('top-preset-5');
+    const recordsTableBody = document.getElementById('records-table-body');
+    const clearRecordsBtn = document.getElementById('clear-records-btn');
+
+    const readerTopbar = document.getElementById('reader-topbar');
+    const docTitle = document.getElementById('doc-title');
+    const toggleModeBtn = document.getElementById('toggle-mode-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const changeFileBtn = document.getElementById('change-file-btn');
+    const floatingMenuPill = document.getElementById('floating-menu-pill');
+    const finishBookBtn = document.getElementById('finish-book-btn');
+    const lookaheadBadge = document.getElementById('lookahead-badge');
+
+    const canvasStage = document.getElementById('canvas-stage');
+    const pdfCanvas = document.getElementById('pdf-canvas');
+    const pdfCtx = pdfCanvas.getContext('2d', { alpha: false });
+
+    const embedStage = document.getElementById('embed-stage');
+    const embedFrameScroller = document.getElementById('embed-frame-scroller');
+    const embedIframe = document.getElementById('embed-iframe');
+    const touchOverlay = document.getElementById('touch-overlay');
+    const zoneLeft = document.getElementById('zone-left');
+    const zoneRight = document.getElementById('zone-right');
+    const pageScrollRail = document.getElementById('page-scroll-rail');
+    const pageScrollSlider = document.getElementById('page-scroll-slider');
+    const scrollUpBtn = document.getElementById('scroll-up-btn');
+    const scrollDownBtn = document.getElementById('scroll-down-btn');
+    const pageIndicator = document.getElementById('page-indicator');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+
+    let readerEngine = 'pdfjs'; // 'pdfjs' (books/Book_X_B.pdf at 0,0) | 'drive-fallback'
+    let kindleTapEnabled = true;
+    let currentPage = 1;
+    let totalPages = 0;
+    let activePresetId = null;
+    let intraPageScrollY = 0;
+    let scrollRafId = null;
+
+    // PDF.js instance & 1-Page Lookahead Cache state
+    let pdfDoc = null;
+    let activeRenderTask = null;
+    let lookaheadRenderTask = null;
+    const lookaheadCache = {
+      pageNum: null,
+      width: 0,
+      height: 0,
+      cssWidth: '',
+      cssHeight: '',
+      stageWidth: 0,
+      stageHeight: 0,
+      canvas: document.createElement('canvas')
+    };
+
+    function clearLookaheadCache() {
+      if (lookaheadRenderTask) {
+        try { lookaheadRenderTask.cancel(); } catch (e) {}
+        lookaheadRenderTask = null;
+      }
+      lookaheadCache.pageNum = null;
+      lookaheadCache.width = 0;
+      lookaheadCache.height = 0;
+      lookaheadCache.canvas.width = 0;
+      lookaheadCache.canvas.height = 0;
+      lookaheadBadge.classList.add('hidden');
+    }
+
+    async function releaseAllReaderMemory() {
+      clearLookaheadCache();
+      if (activeRenderTask) {
+        try { activeRenderTask.cancel(); } catch (e) {}
+        activeRenderTask = null;
+      }
+      if (pdfDoc) {
+        try { await pdfDoc.destroy(); } catch (e) {}
+        pdfDoc = null;
+      }
+      pdfCanvas.width = 0;
+      pdfCanvas.height = 0;
+      embedIframe.removeAttribute('src');
+    }
+
+    function renderReadingRecordsUI() {
+      recordsTableBody.innerHTML = '';
+
+      for (const id of [1, 2, 3, 4, 5]) {
+        const book = PRESET_LINKS[id];
+        const rec = readingRecords[id];
+        const openCount = rec.openHistory.length;
+        const lastOpenIso = openCount > 0 ? rec.openHistory[openCount - 1] : null;
+
+        const statusEl = document.getElementById(`card-status-${id}`);
+        const progressEl = document.getElementById(`card-progress-${id}`);
+        const ctaEl = document.getElementById(`card-cta-${id}`);
+
+        if (statusEl && progressEl && ctaEl) {
+          if (rec.completed) {
+            statusEl.className = 'status-pill completed';
+            statusEl.textContent = 'อ่านจบแล้ว ✓';
+          } else if (openCount > 0 || rec.lastPage > 0) {
+            statusEl.className = 'status-pill reading';
+            statusEl.textContent = 'กำลังอ่าน';
+          } else {
+            statusEl.className = 'status-pill unread';
+            statusEl.textContent = 'ยังไม่ได้อ่าน';
+          }
+
+          if (openCount === 0 && rec.lastPage === 0) {
+            progressEl.textContent = 'ยังไม่มีประวัติการเปิดอ่าน';
+            ctaEl.textContent = 'เริ่มเปิดอ่าน ›';
+          } else {
+            progressEl.textContent = `อ่านถึงหน้า ${rec.lastPage || 1} (สูงสุดหน้า ${rec.maxPage || 1}) • เปิดล่าสุด ${formatThaiDateTime(lastOpenIso)}`;
+            ctaEl.textContent = `อ่านต่อจากหน้า ${rec.lastPage || 1} ›`;
+          }
+        }
+
+        const tr = document.createElement('tr');
+
+        const tdBook = document.createElement('td');
+        tdBook.innerHTML = `<strong>${book.shortTitle}</strong><br><span style="color:var(--muted);font-size:12px;">${book.subtitle} • <code>${book.pdfPath}</code></span>`;
+
+        const tdStatus = document.createElement('td');
+        if (rec.completed) {
+          tdStatus.innerHTML = `<span class="status-pill completed">อ่านจบแล้ว ✓</span>${rec.completedAt ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;">เมื่อ ${formatThaiDateTime(rec.completedAt)}</div>` : ''}`;
+        } else if (openCount > 0) {
+          tdStatus.innerHTML = `<span class="status-pill reading">กำลังอ่าน (ยังไม่จบ)</span>`;
+        } else {
+          tdStatus.innerHTML = `<span class="status-pill unread">ยังไม่ได้อ่าน</span>`;
+        }
+
+        const tdPage = document.createElement('td');
+        if (rec.lastPage > 0) {
+          tdPage.innerHTML = `<strong>หน้า ${rec.lastPage}</strong><div style="font-size:11.5px;color:var(--muted);">อ่านไกลสุด: หน้า ${rec.maxPage}</div>`;
+        } else {
+          tdPage.innerHTML = `<span class="history-empty">-</span>`;
+        }
+
+        const tdHistory = document.createElement('td');
+        if (openCount === 0) {
+          tdHistory.innerHTML = `<span class="history-empty">ยังไม่เคยเปิดอ่าน</span>`;
+        } else {
+          const ul = document.createElement('ol');
+          ul.className = 'history-times-list';
+          const reversed = [...rec.openHistory].reverse();
+          reversed.forEach((iso) => {
+            const li = document.createElement('li');
+            li.textContent = formatThaiDateTime(iso);
+            ul.appendChild(li);
+          });
+          const summaryDiv = document.createElement('div');
+          summaryDiv.style.fontSize = '11.5px';
+          summaryDiv.style.fontWeight = '600';
+          summaryDiv.style.marginBottom = '4px';
+          summaryDiv.textContent = `แสดง ${openCount} ครั้งล่าสุด:`;
+          tdHistory.appendChild(summaryDiv);
+          tdHistory.appendChild(ul);
+        }
+
+        const tdActions = document.createElement('td');
+        const actionWrap = document.createElement('div');
+        actionWrap.className = 'record-actions';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn-toggle-complete';
+        toggleBtn.textContent = rec.completed ? 'เปลี่ยนเป็นกำลังอ่าน' : 'ทำเครื่องหมายว่าอ่านจบ';
+        toggleBtn.addEventListener('click', () => {
+          toggleBookCompleted(id);
+        });
+
+        actionWrap.appendChild(toggleBtn);
+        tdActions.appendChild(actionWrap);
+
+        tr.appendChild(tdBook);
+        tr.appendChild(tdStatus);
+        tr.appendChild(tdPage);
+        tr.appendChild(tdHistory);
+        tr.appendChild(tdActions);
+        recordsTableBody.appendChild(tr);
+      }
+
+      updateFinishButtonInReader();
+    }
+
+    function recordBookOpened(presetId) {
+      if (!presetId || !readingRecords[presetId]) return;
+      const rec = readingRecords[presetId];
+      rec.openHistory.push(new Date().toISOString());
+      // Keep only the most recent MAX_OPEN_HISTORY entries
+      if (rec.openHistory.length > MAX_OPEN_HISTORY) {
+        rec.openHistory = rec.openHistory.slice(-MAX_OPEN_HISTORY);
+      }
+      if (rec.lastPage < 1) {
+        rec.lastPage = 1;
+      }
+      if (rec.maxPage < rec.lastPage) {
+        rec.maxPage = rec.lastPage;
+      }
+      scheduleSaveReadingRecords(true);
+      renderReadingRecordsUI();
+    }
+
+    function recordPageReached(presetId, pageNum) {
+      if (!presetId || !readingRecords[presetId]) return;
+      const rec = readingRecords[presetId];
+      rec.lastPage = pageNum;
+      if (pageNum > rec.maxPage) {
+        rec.maxPage = pageNum;
+      }
+      // If using PDF.js and reaching the last page, automatically mark as completed
+      if (readerEngine === 'pdfjs' && totalPages > 0 && pageNum >= totalPages && !rec.completed) {
+        rec.completed = true;
+        rec.completedAt = new Date().toISOString();
+        updateFinishButtonInReader();
+      }
+      // Debounce localStorage write during rapid page navigation
+      scheduleSaveReadingRecords(false);
+    }
+
+    function toggleBookCompleted(presetId) {
+      if (!presetId || !readingRecords[presetId]) return;
+      const rec = readingRecords[presetId];
+      rec.completed = !rec.completed;
+      rec.completedAt = rec.completed ? new Date().toISOString() : null;
+      if (rec.completed && rec.lastPage < 1) {
+        rec.lastPage = 1;
+        rec.maxPage = Math.max(rec.maxPage, 1);
+      }
+      scheduleSaveReadingRecords(true);
+      renderReadingRecordsUI();
+    }
+
+    function updateFinishButtonInReader() {
+      if (!activePresetId || !readingRecords[activePresetId]) return;
+      const isDone = readingRecords[activePresetId].completed;
+      finishBookBtn.classList.toggle('done', isDone);
+      finishBookBtn.textContent = isDone ? 'อ่านจบแล้ว ✓' : 'ทำเครื่องหมายว่าอ่านจบ';
+    }
+
+    function setLoading(visible, text) {
+      if (text) loadingText.textContent = text;
+      loadingOverlay.classList.toggle('visible', visible);
+    }
+
+    function updatePresetHighlight(presetId) {
+      activePresetId = presetId;
+      topPreset1Btn.classList.toggle('active', presetId === 1);
+      topPreset2Btn.classList.toggle('active', presetId === 2);
+      topPreset3Btn.classList.toggle('active', presetId === 3);
+      topPreset4Btn.classList.toggle('active', presetId === 4);
+      topPreset5Btn.classList.toggle('active', presetId === 5);
+      updateFinishButtonInReader();
+    }
+
+    function updatePageIndicatorText() {
+      if (readerEngine === 'pdfjs' && totalPages > 0) {
+        pageIndicator.textContent = `หน้า ${currentPage} / ${totalPages}`;
+      } else {
+        pageIndicator.textContent = `หน้า ${currentPage}`;
+      }
+    }
+
+    // =========================================================================
+    // 1. PDF.js Engine (Starts each page at (0,0) + 1-Page Lookahead Cache)
+    // =========================================================================
+
+    function computeCanvasFitViewport(page) {
+      const stageWidth = Math.max(canvasStage.clientWidth - 12, 240);
+      const stageHeight = Math.max(canvasStage.clientHeight - 12, 240);
+      const unscaled = page.getViewport({ scale: 1 });
+      const scale = Math.min(stageWidth / unscaled.width, stageHeight / unscaled.height);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const viewport = page.getViewport({ scale: scale * dpr });
+      return {
+        viewport,
+        pixelWidth: Math.floor(viewport.width),
+        pixelHeight: Math.floor(viewport.height),
+        cssWidth: `${Math.floor(viewport.width / dpr)}px`,
+        cssHeight: `${Math.floor(viewport.height / dpr)}px`,
+        stageWidth,
+        stageHeight
+      };
+    }
+
+    // Pre-render ONLY the next 1 page (N + 1) into the reusable offscreen canvas
+    async function preRenderLookaheadPage(nextPageNum) {
+      if (!pdfDoc || nextPageNum < 1 || nextPageNum > totalPages) {
+        lookaheadBadge.classList.add('hidden');
+        return;
+      }
+      if (lookaheadCache.pageNum === nextPageNum &&
+          lookaheadCache.stageWidth === canvasStage.clientWidth &&
+          lookaheadCache.stageHeight === canvasStage.clientHeight) {
+        lookaheadBadge.classList.remove('hidden');
+        return;
+      }
+
+      if (lookaheadRenderTask) {
+        try { lookaheadRenderTask.cancel(); } catch (e) {}
+        lookaheadRenderTask = null;
+      }
+
+      try {
+        const nextPage = await pdfDoc.getPage(nextPageNum);
+        const fit = computeCanvasFitViewport(nextPage);
+        const offCanvas = lookaheadCache.canvas;
+        offCanvas.width = fit.pixelWidth;
+        offCanvas.height = fit.pixelHeight;
+        const offCtx = offCanvas.getContext('2d', { alpha: false });
+
+        lookaheadRenderTask = nextPage.render({
+          canvasContext: offCtx,
+          viewport: fit.viewport
+        });
+        await lookaheadRenderTask.promise;
+        lookaheadRenderTask = null;
+
+        // Release internal PDF.js page resources right after rasterizing to offscreen canvas
+        try { nextPage.cleanup(); } catch (e) {}
+
+        lookaheadCache.pageNum = nextPageNum;
+        lookaheadCache.width = fit.pixelWidth;
+        lookaheadCache.height = fit.pixelHeight;
+        lookaheadCache.cssWidth = fit.cssWidth;
+        lookaheadCache.cssHeight = fit.cssHeight;
+        lookaheadCache.stageWidth = fit.stageWidth;
+        lookaheadCache.stageHeight = fit.stageHeight;
+        lookaheadBadge.classList.remove('hidden');
+      } catch (e) {
+        // Ignore cancelled lookahead render
+      }
+    }
+
+    async function renderPdfJsPage(pageNum) {
+      if (!pdfDoc) return;
+
+      const stageW = canvasStage.clientWidth;
+      const stageH = canvasStage.clientHeight;
+
+      // Fast path: 1-Page Lookahead Cache Hit! (0ms instant page turn)
+      if (
+        lookaheadCache.pageNum === pageNum &&
+        lookaheadCache.width > 0 &&
+        lookaheadCache.stageWidth === stageW &&
+        lookaheadCache.stageHeight === stageH
+      ) {
+        pdfCanvas.width = lookaheadCache.width;
+        pdfCanvas.height = lookaheadCache.height;
+        pdfCanvas.style.width = lookaheadCache.cssWidth;
+        pdfCanvas.style.height = lookaheadCache.cssHeight;
+        pdfCanvas.style.transform = `translateY(${-intraPageScrollY}px)`;
+        pdfCtx.drawImage(lookaheadCache.canvas, 0, 0);
+        updatePageIndicatorText();
+
+        // Immediately schedule pre-rendering of the next page (pageNum + 1)
+        preRenderLookaheadPage(pageNum + 1);
+        return;
+      }
+
+      // Cache Miss: render requested page at (0,0) directly
+      if (activeRenderTask) {
+        try { activeRenderTask.cancel(); } catch (e) {}
+        activeRenderTask = null;
+      }
+
+      try {
+        const page = await pdfDoc.getPage(pageNum);
+        const fit = computeCanvasFitViewport(page);
+
+        pdfCanvas.width = fit.pixelWidth;
+        pdfCanvas.height = fit.pixelHeight;
+        pdfCanvas.style.width = fit.cssWidth;
+        pdfCanvas.style.height = fit.cssHeight;
+        pdfCanvas.style.transform = `translateY(${-intraPageScrollY}px)`;
+
+        activeRenderTask = page.render({
+          canvasContext: pdfCtx,
+          viewport: fit.viewport
+        });
+        await activeRenderTask.promise;
+        activeRenderTask = null;
+
+        // Release internal PDF.js page memory after drawing
+        try { page.cleanup(); } catch (e) {}
+
+        updatePageIndicatorText();
+
+        // Pre-render the next 1 page (pageNum + 1) in background
+        preRenderLookaheadPage(pageNum + 1);
+      } catch (e) {
+        // Ignore cancelled render task
+      }
+    }
+
+    // =========================================================================
+    // 2. Fallback Google Drive Engine (Used only if books/Book_X_B.pdf 404s)
+    // =========================================================================
+
+    function extractGoogleDriveFileId(input) {
+      const trimmed = input.trim();
+      const patterns = [
+        /\/file\/d\/([a-zA-Z0-9_-]+)/,
+        /[?&]id=([a-zA-Z0-9_-]+)/,
+        /\/d\/([a-zA-Z0-9_-]+)/
+      ];
+      for (const pattern of patterns) {
+        const match = trimmed.match(pattern);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    }
+
+    function buildPreviewUrlFromInput(rawUrl) {
+      const trimmed = rawUrl.trim();
+      if (trimmed.includes('/view')) {
+        return trimmed.replace(/\/view\??.*$/, '/preview');
+      }
+      const fileId = extractGoogleDriveFileId(trimmed);
+      try {
+        const parsed = new URL(trimmed);
+        if (fileId) {
+          return `${parsed.origin}/file/d/${fileId}/preview`;
+        }
+        return trimmed;
+      } catch (e) {
+        return trimmed;
+      }
+    }
+
+    let firstPageGrayBorderY = 36;
+    let currentPageStep = 660;
+
+    function initViewerDimensionsForScreen() {
+      const footerHeight = 36;
+      const railWidth = 18;
+      const availHeight = Math.max(window.innerHeight - footerHeight, 320);
+      const availWidth = Math.max(window.innerWidth - railWidth, 320);
+
+      const targetPageStep = Math.round(availHeight * 0.91);
+      const pageGap = 12;
+      const targetWhitePageHeight = Math.max(targetPageStep - pageGap, 260);
+
+      const pageAspect = 1.34;
+      const targetWhitePageWidth = Math.round(targetWhitePageHeight / pageAspect);
+
+      const driveSideGutter = 140;
+      const idealIframeWidth = Math.min(availWidth, Math.max(targetWhitePageWidth + driveSideGutter, 420));
+
+      embedIframe.style.width = `${idealIframeWidth}px`;
+      currentPageStep = Math.round((idealIframeWidth - driveSideGutter) * pageAspect) + pageGap;
+    }
+
+    function updatePositionOnScreen(immediate = false) {
+      if (readerEngine === 'pdfjs') {
+        pdfCanvas.style.transform = `translateY(${-intraPageScrollY}px)`;
+        updatePageIndicatorText();
+        return;
+      }
+
+      if (!kindleTapEnabled) {
+        embedIframe.style.width = '100%';
+        embedIframe.style.transform = 'none';
+        return;
+      }
+
+      embedIframe.classList.toggle('scrolling-active', immediate);
+      const basePageTopY = firstPageGrayBorderY + (currentPage - 1) * currentPageStep;
+      const targetY = Math.max(0, Math.round(basePageTopY + intraPageScrollY));
+      embedIframe.style.transform = `translateY(-${targetY}px)`;
+      updatePageIndicatorText();
+    }
+
+    // Use requestAnimationFrame for smooth, low-CPU intra-page scrolling
+    function adjustIntraPageScroll(deltaY, immediate = true) {
+      if (!kindleTapEnabled && readerEngine === 'drive-fallback') return;
+      intraPageScrollY = Math.round(intraPageScrollY + deltaY);
+      const clampedSlider = Math.max(-600, Math.min(600, intraPageScrollY));
+      pageScrollSlider.value = String(clampedSlider);
+
+      if (scrollRafId) {
+        cancelAnimationFrame(scrollRafId);
+      }
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        updatePositionOnScreen(immediate);
+      });
+    }
+
+    function resetIntraPageScroll() {
+      intraPageScrollY = 0;
+      pageScrollSlider.value = '0';
+    }
+
+    function syncStepFromUserAlignment() {
+      if (readerEngine !== 'drive-fallback' || intraPageScrollY === 0) {
+        resetIntraPageScroll();
+        return;
+      }
+      if (currentPage === 1) {
+        firstPageGrayBorderY = Math.max(0, firstPageGrayBorderY + intraPageScrollY);
+      } else {
+        const deltaPerStep = intraPageScrollY / (currentPage - 1);
+        currentPageStep = Math.max(240, Math.round(currentPageStep + deltaPerStep));
+      }
+      resetIntraPageScroll();
+    }
+
+    function setKindleTapMode(enabled) {
+      kindleTapEnabled = enabled;
+      if (readerEngine === 'drive-fallback') {
+        embedStage.classList.toggle('free-scroll-mode', !enabled);
+        touchOverlay.classList.toggle('hidden', !enabled);
+        pageScrollRail.classList.toggle('hidden', !enabled);
+      } else {
+        touchOverlay.classList.remove('hidden');
+        pageScrollRail.classList.remove('hidden');
+      }
+      floatingMenuPill.classList.add('visible');
+      toggleModeBtn.textContent = enabled
+        ? 'โหมด: แตะซ้าย-ขวา (Kindle)'
+        : 'โหมด: เลื่อนอิสระ (Google Drive)';
+      updatePositionOnScreen();
+    }
+
+    // Open Book: Try loading from books/Book_X_B.pdf via PDF.js at (0,0) first,
+    // and gracefully fall back to Google Drive link if books/ folder is not present in preview
+    async function openBook(presetId) {
+      const book = PRESET_LINKS[presetId];
+      if (!book) return;
+
+      await releaseAllReaderMemory();
+
+      firstPageGrayBorderY = 36;
+      resetIntraPageScroll();
+      updatePresetHighlight(presetId);
+      recordBookOpened(presetId);
+
+      const savedPage = Math.max(1, readingRecords[presetId].lastPage || 1);
+      currentPage = savedPage;
+      totalPages = 0;
+
+      setLoading(true, `กำลังเปิด ${book.shortTitle} (${book.pdfPath})...`);
+      floatingMenuPill.classList.add('visible');
+      docTitle.textContent = `${book.label}`;
+      setupScreen.classList.add('hidden');
+      readerTopbar.classList.remove('visible');
+
+      // 1. Try loading local/GitHub PDF from books/Book_X_B.pdf with PDF.js (0,0 vector rendering)
+      if (window.pdfjsLib && book.pdfPath) {
+        try {
+          const loadingTask = window.pdfjsLib.getDocument(book.pdfPath);
+          const loadedPdf = await loadingTask.promise;
+          readerEngine = 'pdfjs';
+          pdfDoc = loadedPdf;
+          totalPages = pdfDoc.numPages;
+          if (currentPage > totalPages) {
+            currentPage = totalPages;
+          }
+
+          embedStage.classList.remove('visible');
+          canvasStage.classList.remove('hidden');
+          toggleModeBtn.style.display = 'none';
+          setKindleTapMode(true);
+
+          await renderPdfJsPage(currentPage);
+          setLoading(false);
+          return;
+        } catch (err) {
+          // If books/Book_X_B.pdf is not found (e.g. inside sandbox preview), fall back to Google Drive
+        }
+      }
+
+      // 2. Fallback to Google Drive viewer
+      readerEngine = 'drive-fallback';
+      lookaheadBadge.classList.add('hidden');
+      canvasStage.classList.add('hidden');
+      embedStage.classList.add('visible');
+      toggleModeBtn.style.display = 'inline-flex';
+      initViewerDimensionsForScreen();
+      setKindleTapMode(true);
+
+      const previewUrl = buildPreviewUrlFromInput(book.url);
+      embedIframe.src = previewUrl;
+
+      embedIframe.onload = () => {
+        updatePositionOnScreen();
+        setLoading(false);
+      };
+      setTimeout(() => {
+        updatePositionOnScreen();
+        setLoading(false);
+      }, 1200);
+    }
+
+    function flashZone(zoneEl) {
+      zoneEl.classList.add('active-tap');
+      setTimeout(() => {
+        zoneEl.classList.remove('active-tap');
+      }, 220);
+    }
+
+    function goNextPage() {
+      flashZone(zoneRight);
+      readerTopbar.classList.remove('visible');
+
+      if (readerEngine === 'pdfjs') {
+        if (!pdfDoc || currentPage >= totalPages) return;
+        resetIntraPageScroll();
+        currentPage += 1;
+        recordPageReached(activePresetId, currentPage);
+        renderPdfJsPage(currentPage);
+        return;
+      }
+
+      syncStepFromUserAlignment();
+      currentPage += 1;
+      recordPageReached(activePresetId, currentPage);
+      updatePositionOnScreen(false);
+    }
+
+    function goPrevPage() {
+      flashZone(zoneLeft);
+      readerTopbar.classList.remove('visible');
+      if (currentPage <= 1) return;
+
+      if (readerEngine === 'pdfjs') {
+        if (!pdfDoc) return;
+        resetIntraPageScroll();
+        currentPage -= 1;
+        recordPageReached(activePresetId, currentPage);
+        renderPdfJsPage(currentPage);
+        return;
+      }
+
+      syncStepFromUserAlignment();
+      currentPage -= 1;
+      recordPageReached(activePresetId, currentPage);
+      updatePositionOnScreen(false);
+    }
+
+    // Preset buttons (Beginner Books 1 to 5) on Home Screen
+    openPreset1Btn.addEventListener('click', () => openBook(1));
+    openPreset2Btn.addEventListener('click', () => openBook(2));
+    openPreset3Btn.addEventListener('click', () => openBook(3));
+    openPreset4Btn.addEventListener('click', () => openBook(4));
+    openPreset5Btn.addEventListener('click', () => openBook(5));
+
+    // Quick-switch buttons in Top Bar
+    topPreset1Btn.addEventListener('click', () => openBook(1));
+    topPreset2Btn.addEventListener('click', () => openBook(2));
+    topPreset3Btn.addEventListener('click', () => openBook(3));
+    topPreset4Btn.addEventListener('click', () => openBook(4));
+    topPreset5Btn.addEventListener('click', () => openBook(5));
+
+    // Mark current book as finished from Reader Footer
+    finishBookBtn.addEventListener('click', () => {
+      if (activePresetId) {
+        toggleBookCompleted(activePresetId);
+      }
+    });
+
+    // Clear all reading records
+    clearRecordsBtn.addEventListener('click', () => {
+      readingRecords = createEmptyRecords();
+      scheduleSaveReadingRecords(true);
+      renderReadingRecordsUI();
+    });
+
+    // Mouse wheel scrolling within the current page
+    touchOverlay.addEventListener('wheel', (e) => {
+      if (!kindleTapEnabled && readerEngine === 'drive-fallback') return;
+      e.preventDefault();
+      adjustIntraPageScroll(e.deltaY * 0.45, true);
+    }, { passive: false });
+
+    // Touch drag vertical scrolling within the current page vs tap to change page
+    function attachTouchScrollAndTap(zoneEl, onTapAction) {
+      let startX = 0;
+      let startY = 0;
+      let lastY = 0;
+      let isDraggingVertically = false;
+      let touchActive = false;
+
+      zoneEl.addEventListener('pointerdown', (e) => {
+        touchActive = true;
+        isDraggingVertically = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        lastY = e.clientY;
+        zoneEl.setPointerCapture(e.pointerId);
+      });
+
+      zoneEl.addEventListener('pointermove', (e) => {
+        if (!touchActive) return;
+        const totalDy = e.clientY - startY;
+        const totalDx = e.clientX - startX;
+        if (!isDraggingVertically && Math.abs(totalDy) > 8 && Math.abs(totalDy) > Math.abs(totalDx)) {
+          isDraggingVertically = true;
+        }
+        if (isDraggingVertically) {
+          const stepDy = lastY - e.clientY;
+          lastY = e.clientY;
+          adjustIntraPageScroll(stepDy * 0.85, true);
+        }
+      });
+
+      zoneEl.addEventListener('pointerup', () => {
+        if (!touchActive) return;
+        touchActive = false;
+        if (!isDraggingVertically) {
+          onTapAction();
+        }
+      });
+
+      zoneEl.addEventListener('pointercancel', () => {
+        touchActive = false;
+        isDraggingVertically = false;
+      });
+    }
+
+    attachTouchScrollAndTap(zoneRight, goNextPage);
+    attachTouchScrollAndTap(zoneLeft, goPrevPage);
+
+    // Right-side scroll slider & footer step buttons for intra-page scrolling
+    pageScrollSlider.addEventListener('input', () => {
+      intraPageScrollY = Number(pageScrollSlider.value) || 0;
+      if (scrollRafId) cancelAnimationFrame(scrollRafId);
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        updatePositionOnScreen(true);
+      });
+    });
+
+    scrollUpBtn.addEventListener('click', () => {
+      adjustIntraPageScroll(-40, false);
+    });
+
+    scrollDownBtn.addEventListener('click', () => {
+      adjustIntraPageScroll(40, false);
+    });
+
+    toggleModeBtn.addEventListener('click', () => {
+      setKindleTapMode(!kindleTapEnabled);
+    });
+
+    floatingMenuPill.addEventListener('click', () => {
+      if (!kindleTapEnabled && readerEngine === 'drive-fallback') {
+        setKindleTapMode(true);
+      }
+      readerTopbar.classList.toggle('visible');
+    });
+
+    // Keyboard navigation support
+    window.addEventListener('keydown', (e) => {
+      if (!setupScreen.classList.contains('hidden')) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        goNextPage();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        goPrevPage();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        adjustIntraPageScroll(36, false);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        adjustIntraPageScroll(-36, false);
+      }
+    });
+
+    // Re-fit page on window resize / orientation change
+    window.addEventListener('resize', () => {
+      if (setupScreen.classList.contains('hidden')) {
+        if (readerEngine === 'pdfjs' && pdfDoc) {
+          clearLookaheadCache();
+          renderPdfJsPage(currentPage);
+        } else {
+          updatePositionOnScreen();
+        }
+      }
+    });
+
+    // Return to Home Screen & release PDF/Iframe memory
+    changeFileBtn.addEventListener('click', async () => {
+      flushReadingRecordsToStorage();
+      await releaseAllReaderMemory();
+      renderReadingRecordsUI();
+      setupScreen.classList.remove('hidden');
+      readerTopbar.classList.remove('visible');
+    });
+
+    fullscreenBtn.addEventListener('click', () => {
+      const docEl = document.documentElement;
+      if (!document.fullscreenElement && docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Initialize reading records on startup
+    loadReadingRecords();
+    renderReadingRecordsUI();
+  </script>
+</body>
+</html>
